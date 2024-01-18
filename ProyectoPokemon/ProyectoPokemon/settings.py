@@ -79,6 +79,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'db_pokemon',
         'USER': 'root',
+        'HOST': 'localhost',
         'PASSWORD': '1234'
     }
 }

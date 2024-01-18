@@ -17,6 +17,16 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from pokemon import views
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('login/', views.login),
+
+    
 ]
+
+"""
+    path('juegos/<int:id_solicitado>', views.devolver_juegos_por_id),
+    path('juegos/<int:juego_id>/comentarios', views.guardar_comentario)
+    """
