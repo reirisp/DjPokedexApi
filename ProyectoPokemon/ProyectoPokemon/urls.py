@@ -22,7 +22,7 @@ from pokemon import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('login/', views.login),
-
+    path('capturados/', views.get_capturados),
     
 ]
 

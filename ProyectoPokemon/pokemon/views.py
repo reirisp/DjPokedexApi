@@ -8,3 +8,16 @@ import json
 
 def login(request):
     return HttpResponse("<h1>Hola</h1>");
+
+def get_capturados(request):
+    if request.method != 'GET':
+        return None
+    lista=Capturado.objects.filter(id_usuario=1)#.all()
+    
+    respuesta_final=[]
+    for fila_sql in lista:
+        pokemon_actual=Pokemon.objects.get(capturado=fila_sql.id_pokemon.id_pokemon)
+        diccionario={}
+        diccionario['id_pokemon']=pokemon_actual.id_pokemon
+        respuesta_final.append(diccionario)
+    return JsonResponse(respuesta_final, safe=False)
