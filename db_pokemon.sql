@@ -23,9 +23,11 @@ DROP TABLE IF EXISTS `amigo`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `amigo` (
-  `id_usuario` int(11) NOT NULL,
-  `id_amigo` int(11) NOT NULL,
-  PRIMARY KEY (`id_usuario`,`id_amigo`),
+  `id_amistad` int(11) NOT NULL,
+  `id_usuario` int(11) DEFAULT NULL,
+  `id_amigo` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id_amistad`),
+  KEY `id_usuario` (`id_usuario`),
   KEY `id_amigo` (`id_amigo`),
   CONSTRAINT `amigo_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id`),
   CONSTRAINT `amigo_ibfk_2` FOREIGN KEY (`id_amigo`) REFERENCES `usuario` (`id`)
@@ -39,14 +41,14 @@ CREATE TABLE `amigo` (
 LOCK TABLES `amigo` WRITE;
 /*!40000 ALTER TABLE `amigo` DISABLE KEYS */;
 INSERT INTO `amigo` VALUES
-(1,3),
-(1,4),
-(2,3),
-(2,4),
-(3,1),
-(3,2),
-(4,1),
-(4,2);
+(1,1,3),
+(2,1,4),
+(3,2,3),
+(4,2,4),
+(5,3,1),
+(6,3,2),
+(7,4,1),
+(8,4,2);
 /*!40000 ALTER TABLE `amigo` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -216,20 +218,22 @@ DROP TABLE IF EXISTS `registro_intercambio`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `registro_intercambio` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `id_usuario` int(11) NOT NULL,
   `id_amigo` int(11) NOT NULL,
   `id_pokemon` int(11) NOT NULL,
   `id_pokemon_amigo` int(11) NOT NULL,
-  `fecha` datetime DEFAULT NULL,
-  PRIMARY KEY (`id_usuario`,`id_amigo`,`id_pokemon`,`id_pokemon_amigo`),
-  KEY `id_amigo` (`id_amigo`),
-  KEY `id_pokemon` (`id_pokemon`),
-  KEY `id_pokemon_amigo` (`id_pokemon_amigo`),
-  CONSTRAINT `registro_intercambio_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id`),
-  CONSTRAINT `registro_intercambio_ibfk_2` FOREIGN KEY (`id_amigo`) REFERENCES `usuario` (`id`),
-  CONSTRAINT `registro_intercambio_ibfk_3` FOREIGN KEY (`id_pokemon`) REFERENCES `pokemon` (`id`),
-  CONSTRAINT `registro_intercambio_ibfk_4` FOREIGN KEY (`id_pokemon_amigo`) REFERENCES `pokemon` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `fecha` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_idUsuario` (`id_usuario`),
+  KEY `fk_idAmigo` (`id_amigo`),
+  KEY `fk_pokemon` (`id_pokemon`),
+  KEY `fk_pokemonAmigo` (`id_pokemon_amigo`),
+  CONSTRAINT `fk_idAmigo` FOREIGN KEY (`id_amigo`) REFERENCES `usuario` (`id`),
+  CONSTRAINT `fk_idUsuario` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id`),
+  CONSTRAINT `fk_pokemon` FOREIGN KEY (`id_pokemon`) REFERENCES `pokemon` (`id`),
+  CONSTRAINT `fk_pokemonAmigo` FOREIGN KEY (`id_pokemon_amigo`) REFERENCES `pokemon` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -239,9 +243,9 @@ CREATE TABLE `registro_intercambio` (
 LOCK TABLES `registro_intercambio` WRITE;
 /*!40000 ALTER TABLE `registro_intercambio` DISABLE KEYS */;
 INSERT INTO `registro_intercambio` VALUES
-(1,4,5,16,'2023-08-04 17:00:00'),
-(3,1,20,21,'2023-11-20 13:20:00'),
-(4,2,3,19,'2023-05-16 19:45:00');
+(1,1,4,5,16,'2023-08-04 17:00:00'),
+(2,3,1,20,21,'2023-11-20 13:20:00'),
+(3,4,2,3,19,'2023-05-16 19:45:00');
 /*!40000 ALTER TABLE `registro_intercambio` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -253,7 +257,7 @@ DROP TABLE IF EXISTS `usuario`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `usuario` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(255) DEFAULT NULL,
   `apellidos` varchar(255) DEFAULT NULL,
   `nickname` varchar(50) DEFAULT NULL,
@@ -263,7 +267,7 @@ CREATE TABLE `usuario` (
   `avatar` varchar(255) DEFAULT NULL,
   `token` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -289,4 +293,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-01-16 14:30:25
+-- Dump completed on 2024-01-24 14:15:03
