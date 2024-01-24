@@ -21,7 +21,7 @@ from pokemon import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('login/', views.login),
+    path('users/<str:nick_solicitado>/amigos/', views.buscar_amigo)
 
     
 ]
