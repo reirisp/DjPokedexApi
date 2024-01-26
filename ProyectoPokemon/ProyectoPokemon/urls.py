@@ -22,11 +22,6 @@ from pokemon import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('login/', views.login),
-
+    path('register/', views.register),
     
 ]
-
-"""
-    path('juegos/<int:id_solicitado>', views.devolver_juegos_por_id),
-    path('juegos/<int:juego_id>/comentarios', views.guardar_comentario)
-    """
