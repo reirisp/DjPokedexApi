@@ -23,5 +23,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('login/', views.login),
     path('register/', views.register),
-    path('users/<str:nick_solicitado>/amigos/', views.buscar_amigo)
+    path('users/<str:nick_solicitado>/amigos/', views.buscar_amigo),
+    path('capturados/', views.get_capturados),
 ]

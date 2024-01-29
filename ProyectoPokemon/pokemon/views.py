@@ -10,6 +10,23 @@ import datetime
 def login(request):
     return HttpResponse("<h1>Hola</h1>");
 
+# Vista GET Capturados
+def get_capturados(request):
+    if request.method != 'GET':
+        return None
+    lista=Capturado.objects.filter(id_usuario=1)#.all()
+    
+    respuesta_final=[]
+    for fila_sql in lista:
+        pokemon_actual=Pokemon.objects.get(id=fila_sql.id_pokemon.id)
+        diccionario={}
+        diccionario['id_pokemon']=pokemon_actual.id
+        diccionario['nombre']=pokemon_actual.nombre
+        diccionario['imagen']=pokemon_actual.urlimagen
+        diccionario['tipo']=pokemon_actual.tipo
+        respuesta_final.append(diccionario)
+    return JsonResponse(respuesta_final, safe=False)
+  
 # Configuración de JWT (Json Web Token)
 SECRET_KEY = 'claveSecreta.' # Para almacenar la secret key de forma segura
 
@@ -86,6 +103,7 @@ def register(request):
             # Si hay algún error durante el registro devolvemos un mensaje de error
             return JsonResponse({'error': str(error)}, status=400)
 
+# Vista buscar amigos
 def buscar_amigo(request, nick_solicitado):
     usuario = Usuario.objects.get(nickname=nick_solicitado)
     amigos = Amigo.objects.filter(id_usuario=usuario)
