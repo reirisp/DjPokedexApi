@@ -7,7 +7,6 @@ from django.core.paginator import Paginator
 import datetime
 
 # Create your views here.
-
 def login(request):
     return HttpResponse("<h1>Hola</h1>");
 
@@ -86,3 +85,19 @@ def register(request):
         except Exception as error:
             # Si hay algún error durante el registro devolvemos un mensaje de error
             return JsonResponse({'error': str(error)}, status=400)
+
+def buscar_amigo(request, nick_solicitado):
+    usuario = Usuario.objects.get(nickname=nick_solicitado)
+    amigos = Amigo.objects.filter(id_usuario=usuario)
+    lista = []
+
+    for amigo_relacion in amigos:
+        # Acceder a los objetos Usuario relacionados
+        info_amigo = amigo_relacion.id_amigo
+
+        diccionario = {}
+        diccionario['nickname'] = info_amigo.nickname
+        diccionario['avatar'] = info_amigo.avatar
+        lista.append(diccionario)
+
+    return JsonResponse(lista, safe=False)
