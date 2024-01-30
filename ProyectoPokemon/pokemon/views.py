@@ -5,11 +5,12 @@ import json, jwt
 from .models import Amigo, Capturado, Deseado, Favorito, Pokemon, RegistroIntercambio, Usuario
 from django.core.paginator import Paginator
 import datetime
+from django.contrib.auth import authenticate, login
+from django.utils.decorators import method_decorator
+from django.views import View
+
 
 # Create your views here.
-def login(request):
-    return HttpResponse("<h1>Hola</h1>");
-
 # Vista GET Capturados
 def get_capturados(request):
     if request.method != 'GET':
@@ -83,9 +84,6 @@ def register(request):
                 contraseña=contraseñaHasheada, # Almacenar la contraseña hasheada
                 fecha=datetime.datetime.now(), # Almacena la fecha de registro
             )
-            
-            # Guardamos el registro del nuevo usuario en la bbdd
-            #nuevo_usuario.save()
 
             # Generamos el token utilizando la función create_token (creada anteriormente)
             token = create_token(nuevo_usuario.id)
@@ -101,7 +99,7 @@ def register(request):
         
         except Exception as error:
             # Si hay algún error durante el registro devolvemos un mensaje de error
-            return JsonResponse({'error': str(error)}, status=400)
+            return HttpResponse({'error': str(error)}, status=400)
 
 # Vista buscar amigos
 def buscar_amigo(request, nick_solicitado):
@@ -119,3 +117,29 @@ def buscar_amigo(request, nick_solicitado):
         lista.append(diccionario)
 
     return JsonResponse(lista, safe=False)
+
+@csrf_exempt
+def login(request):
+    # Verifica si la solicitud es de tipo POST.
+    if request.method == 'POST':
+        try:
+            # Carga los datos del cuerpo de la solicitud y los convierte de JSON a un diccionario de Python.
+            loguearse = json.loads(request.body)
+
+            # Busca un usuario en la base de datos que coincida con el 'nickname' proporcionado.
+            # Si no encuentra al usuario lanzamos un mensaje de error
+            usuario = Usuario.objects.get(nickname=loguearse['nickname'])
+
+            # Compruebamos si la contraseña proporcionada coincide con la contraseña almacenada (hasheda) del usuario.
+            if check_password(loguearse['contraseña'], usuario.contraseña):
+                # Si la contraseña es correcta, genera un token
+                token = create_token(usuario.id)
+
+                # Devuelve una respuesta JSON con el token y el estado HTTP 200 (OK).
+                return JsonResponse({'token': token}, status=200)
+            else:
+                # Si la contraseña no es correcta, devuelve una respuesta JSON con un mensaje de error.
+                return JsonResponse({'error': 'Contraseña incorrecta'}, status=401)
+        except Usuario.DoesNotExist:
+            # Si el usuario no existe en la base de datos, devuelve una respuesta JSON con un mensaje de error.
+            return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
