@@ -28,6 +28,7 @@ def get_capturados(request):
         respuesta_final.append(diccionario)
     return JsonResponse(respuesta_final, safe=False)
   
+  
 # Configuración de JWT (Json Web Token)
 SECRET_KEY = 'claveSecreta.' # Para almacenar la secret key de forma segura
 
@@ -43,6 +44,7 @@ def create_token(id):
     token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
     return token
 
+  
 # Función para verificar un token JWT en una solicitud HTTP
 @csrf_exempt
 def verify_token(request):
@@ -64,6 +66,7 @@ def verify_token(request):
         # Si el token ha expirado devolvemos un mensaje de error
         return 'El token ha expirado!', None
 
+      
 # Vista para el registro de nuevos usuarios
 @csrf_exempt
 def register(request):
@@ -101,6 +104,7 @@ def register(request):
             # Si hay algún error durante el registro devolvemos un mensaje de error
             return HttpResponse({'error': str(error)}, status=400)
 
+          
 # Vista buscar amigos
 def buscar_amigo(request, nick_solicitado):
     usuario = Usuario.objects.get(nickname=nick_solicitado)
@@ -118,6 +122,8 @@ def buscar_amigo(request, nick_solicitado):
 
     return JsonResponse(lista, safe=False)
 
+
+# Vista login
 @csrf_exempt
 def login(request):
     # Verifica si la solicitud es de tipo POST.
@@ -143,3 +149,26 @@ def login(request):
         except Usuario.DoesNotExist:
             # Si el usuario no existe en la base de datos, devuelve una respuesta JSON con un mensaje de error.
             return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
+
+
+# Vista eliminar amigo
+def eliminar_amigo(request, nick_amigo, nick_usuario):
+     # Verificar el token antes de continuar
+    error, payload = verify_token(request)
+    if error:
+        return JsonResponse({'message': str(error)}, status=401, safe = False)
+
+    # Solo llegará aquí si el token es válido
+    usuario = Usuario.objects.get(nickname = nick_usuario)
+    amigo = Usuario.objects.get(nickname = nick_amigo)
+    try:
+        amistad = Amigo.objects.get(id_usuario=usuario.id, id_amigo=amigo.id)
+        amistad_inversa = Amigo.objects.get(id_usuario = amigo.id, id_amigo = usuario.id)
+    except Amigo.DoesNotExist:
+        return JsonResponse({"mensaje": "Amistad no encontrada"}, status=404)
+    
+    #Aquí llegará sólo si la solicitud es válida
+    amistad.delete()
+    amistad_inversa.delete()
+    return JsonResponse({"message": "Amistad eliminada con éxito"}) 
+
