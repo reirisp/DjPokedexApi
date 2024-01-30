@@ -25,4 +25,5 @@ urlpatterns = [
     path('register/', views.register),
     path('users/<str:nick_solicitado>/amigos/', views.buscar_amigo),
     path('capturados/', views.get_capturados),
+    path('users/<str:nick_solicitado>/amigos/<str:nick_amigo>/intercambios', views.get_intercambio)
 ]

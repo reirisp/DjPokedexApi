@@ -119,3 +119,17 @@ def buscar_amigo(request, nick_solicitado):
         lista.append(diccionario)
 
     return JsonResponse(lista, safe=False)
+
+def get_intercambio(request, nick_solicitado,nick_amigo):
+    if request.method != 'GET':
+        return None
+    intercambios=RegistroIntercambio.objects.filter(id_usuario=nick_solicitado).select_related('id_amigo')
+    intercambio_data=[]
+    for intercambio in intercambios:
+        info_intercambio = {
+            'poke': intercambio.id_pokemon.nombre,
+            'poke_amigo' : intercambio.id_pokemon_amigo.nombre,
+            'fecha' : intercambio.fecha
+        }
+        intercambio_data.append(info_intercambio)
+    return JsonResponse({'intercambios':str(intercambio_data)}, status=200)
