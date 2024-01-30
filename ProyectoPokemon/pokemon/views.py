@@ -119,3 +119,23 @@ def buscar_amigo(request, nick_solicitado):
         lista.append(diccionario)
 
     return JsonResponse(lista, safe=False)
+
+def eliminar_amigo(request, nick_amigo, nick_usuario):
+     # Verificar el token antes de continuar
+    error, payload = verify_token(request)
+    if error:
+        return JsonResponse({'message': str(error)}, status=401, safe = False)
+
+    # Solo llegará aquí si el token es válido
+    usuario = Usuario.objects.get(nickname = nick_usuario)
+    amigo = Usuario.objects.get(nickname = nick_amigo)
+    try:
+        amistad = Amigo.objects.get(id_usuario=usuario.id, id_amigo=amigo.id)
+        amistad_inversa = Amigo.objects.get(id_usuario = amigo.id, id_amigo = usuario.id)
+    except Amigo.DoesNotExist:
+        return JsonResponse({"mensaje": "Amistad no encontrada"}, status=404)
+    
+    #Aquí llegará sólo si la solicitud es válida
+    amistad.delete()
+    amistad_inversa.delete()
+    return JsonResponse({"message": "Amistad eliminada con éxito"}) 
