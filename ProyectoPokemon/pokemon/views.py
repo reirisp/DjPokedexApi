@@ -172,3 +172,32 @@ def eliminar_amigo(request, nick_amigo, nick_usuario):
     amistad_inversa.delete()
     return JsonResponse({"message": "Amistad eliminada con éxito"}) 
 
+
+# Vista Log out
+@csrf_exempt
+def logout(request, id):
+
+    # Verificar si el método de la solicitud es PATCH
+    if request.method != 'PATCH':
+
+        # Comprobación de token
+        error_response, payload = verify_token(request)
+        if error_response:
+            return error_response
+    
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    try:
+        # Obtener el usuario con el ID proporcionado
+        usuario = Usuario.objects.get(pk=id)
+        
+        # Limpiar o anular el token de sesión del usuario
+        usuario.token = None
+        usuario.save()
+
+        # Devolver una respuesta JSON indicando que la sesión se cerró con éxito
+        return JsonResponse({'message': 'Sesión cerrada con éxito'}, status=200)
+    
+    except Usuario.DoesNotExist:
+        # Devolver una respuesta JSON indicando que el usuario no fue encontrado
+        return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
