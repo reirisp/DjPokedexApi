@@ -9,12 +9,11 @@ from django.db import models
 
 
 class Amigo(models.Model):
-    id_amistad = models.IntegerField(primary_key=True)
     id_usuario = models.ForeignKey('Usuario', models.DO_NOTHING, db_column='id_usuario', blank=True, null=True)
     id_amigo = models.ForeignKey('Usuario', models.DO_NOTHING, db_column='id_amigo', related_name='amigo_id_amigo_set', blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'amigo'
 
 

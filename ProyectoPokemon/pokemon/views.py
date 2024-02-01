@@ -10,25 +10,6 @@ from django.utils.decorators import method_decorator
 from django.views import View
 
 
-# Create your views here.
-# Vista GET Capturados
-def get_capturados(request):
-    if request.method != 'GET':
-        return None
-    lista=Capturado.objects.filter(id_usuario=1)#.all()
-    
-    respuesta_final=[]
-    for fila_sql in lista:
-        pokemon_actual=Pokemon.objects.get(id=fila_sql.id_pokemon.id)
-        diccionario={}
-        diccionario['id_pokemon']=pokemon_actual.id
-        diccionario['nombre']=pokemon_actual.nombre
-        diccionario['imagen']=pokemon_actual.urlimagen
-        diccionario['tipo']=pokemon_actual.tipo
-        respuesta_final.append(diccionario)
-    return JsonResponse(respuesta_final, safe=False)
-  
-  
 # Configuración de JWT (Json Web Token)
 SECRET_KEY = 'claveSecreta.' # Para almacenar la secret key de forma segura
 
@@ -66,7 +47,34 @@ def verify_token(request):
         # Si el token ha expirado devolvemos un mensaje de error
         return 'El token ha expirado!', None
 
-      
+# Vista login
+@csrf_exempt
+def login(request):
+    # Verifica si la solicitud es de tipo POST.
+    if request.method == 'POST':
+        try:
+            # Carga los datos del cuerpo de la solicitud y los convierte de JSON a un diccionario de Python.
+            loguearse = json.loads(request.body)
+
+            # Busca un usuario en la base de datos que coincida con el 'nickname' proporcionado.
+            # Si no encuentra al usuario lanzamos un mensaje de error
+            usuario = Usuario.objects.get(nickname=loguearse['nickname'])
+
+            # Compruebamos si la contraseña proporcionada coincide con la contraseña almacenada (hasheda) del usuario.
+            if check_password(loguearse['contraseña'], usuario.contraseña):
+                # Si la contraseña es correcta, genera un token
+                token = create_token(usuario.id)
+
+                # Devuelve una respuesta JSON con el token y el estado HTTP 200 (OK).
+                return JsonResponse({'token': token}, status=200)
+            else:
+                # Si la contraseña no es correcta, devuelve una respuesta JSON con un mensaje de error.
+                return JsonResponse({'error': 'Contraseña incorrecta'}, status=401)
+        except Usuario.DoesNotExist:
+            # Si el usuario no existe en la base de datos, devuelve una respuesta JSON con un mensaje de error.
+            return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
+
+          
 # Vista para el registro de nuevos usuarios
 @csrf_exempt
 def register(request):
@@ -105,74 +113,6 @@ def register(request):
             return HttpResponse({'error': str(error)}, status=400)
 
           
-# Vista buscar amigos
-def buscar_amigo(request, nick_solicitado):
-    usuario = Usuario.objects.get(nickname=nick_solicitado)
-    amigos = Amigo.objects.filter(id_usuario=usuario)
-    lista = []
-
-    for amigo_relacion in amigos:
-        # Acceder a los objetos Usuario relacionados
-        info_amigo = amigo_relacion.id_amigo
-
-        diccionario = {}
-        diccionario['nickname'] = info_amigo.nickname
-        diccionario['avatar'] = info_amigo.avatar
-        lista.append(diccionario)
-
-    return JsonResponse(lista, safe=False)
-
-
-# Vista login
-@csrf_exempt
-def login(request):
-    # Verifica si la solicitud es de tipo POST.
-    if request.method == 'POST':
-        try:
-            # Carga los datos del cuerpo de la solicitud y los convierte de JSON a un diccionario de Python.
-            loguearse = json.loads(request.body)
-
-            # Busca un usuario en la base de datos que coincida con el 'nickname' proporcionado.
-            # Si no encuentra al usuario lanzamos un mensaje de error
-            usuario = Usuario.objects.get(nickname=loguearse['nickname'])
-
-            # Compruebamos si la contraseña proporcionada coincide con la contraseña almacenada (hasheda) del usuario.
-            if check_password(loguearse['contraseña'], usuario.contraseña):
-                # Si la contraseña es correcta, genera un token
-                token = create_token(usuario.id)
-
-                # Devuelve una respuesta JSON con el token y el estado HTTP 200 (OK).
-                return JsonResponse({'token': token}, status=200)
-            else:
-                # Si la contraseña no es correcta, devuelve una respuesta JSON con un mensaje de error.
-                return JsonResponse({'error': 'Contraseña incorrecta'}, status=401)
-        except Usuario.DoesNotExist:
-            # Si el usuario no existe en la base de datos, devuelve una respuesta JSON con un mensaje de error.
-            return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
-
-
-# Vista eliminar amigo
-def eliminar_amigo(request, nick_amigo, nick_usuario):
-     # Verificar el token antes de continuar
-    error, payload = verify_token(request)
-    if error:
-        return JsonResponse({'message': str(error)}, status=401, safe = False)
-
-    # Solo llegará aquí si el token es válido
-    usuario = Usuario.objects.get(nickname = nick_usuario)
-    amigo = Usuario.objects.get(nickname = nick_amigo)
-    try:
-        amistad = Amigo.objects.get(id_usuario=usuario.id, id_amigo=amigo.id)
-        amistad_inversa = Amigo.objects.get(id_usuario = amigo.id, id_amigo = usuario.id)
-    except Amigo.DoesNotExist:
-        return JsonResponse({"mensaje": "Amistad no encontrada"}, status=404)
-    
-    #Aquí llegará sólo si la solicitud es válida
-    amistad.delete()
-    amistad_inversa.delete()
-    return JsonResponse({"message": "Amistad eliminada con éxito"}) 
-
-
 # Vista Log out
 @csrf_exempt
 def logout(request, id):
@@ -201,3 +141,98 @@ def logout(request, id):
     except Usuario.DoesNotExist:
         # Devolver una respuesta JSON indicando que el usuario no fue encontrado
         return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
+
+
+# Vista buscar amigos
+def buscar_amigo(request, nick_solicitado):
+    usuario = Usuario.objects.get(nickname=nick_solicitado)
+    amigos = Amigo.objects.filter(id_usuario=usuario)
+    lista = []
+
+    for amigo_relacion in amigos:
+        # Acceder a los objetos Usuario relacionados
+        info_amigo = amigo_relacion.id_amigo
+
+        diccionario = {}
+        diccionario['nickname'] = info_amigo.nickname
+        diccionario['avatar'] = info_amigo.avatar
+        lista.append(diccionario)
+
+    return JsonResponse(lista, safe=False)
+
+
+# Vista eliminar amigo
+@csrf_exempt
+def modificar_amigo(request, nick_amigo, nick_usuario):
+    usuario = Usuario.objects.get(nickname = nick_usuario)
+    amigo = Usuario.objects.get(nickname = nick_amigo)
+    
+    # Verificar el token antes de continuar
+    error, payload = verify_token(request)
+    if error:
+        return JsonResponse({'message': str(error)}, status=401, safe = False)
+
+    # Solo llegará aquí si el token es válido
+    if request.method == 'DELETE':  
+        try:
+            amistad = Amigo.objects.get(id_usuario=usuario.id, id_amigo=amigo.id)
+            amistad_inversa = Amigo.objects.get(id_usuario = amigo.id, id_amigo = usuario.id)
+        except Amigo.DoesNotExist:
+            return JsonResponse({"mensaje": "Amistad no encontrada"}, status=404)
+        
+        #Aquí llegará sólo si la solicitud es válida
+        amistad.delete()
+        amistad_inversa.delete()
+        return JsonResponse({"message": "Amistad eliminada con éxito"}) 
+    elif request.method == 'POST':
+        try:
+            nueva_amistad = Amigo(
+                id_usuario = usuario,
+                id_amigo = amigo
+            )
+            nueva_amistad.save()
+
+            nueva_amistad_inversa = Amigo(
+                id_usuario = amigo,
+                id_amigo = usuario
+            )
+            nueva_amistad_inversa.save()
+            return JsonResponse({'message': 'Amistad registrada exitosamente'}, status=201)
+
+        except Exception as error:
+            return JsonResponse({'error': str(error)}, status=400, safe = False)
+
+
+# Vista GET Capturados
+def get_capturados(request):
+    if request.method != 'GET':
+        return None
+    lista=Capturado.objects.filter(id_usuario=1)#.all()
+    
+    respuesta_final=[]
+    for fila_sql in lista:
+        pokemon_actual=Pokemon.objects.get(id=fila_sql.id_pokemon.id)
+        diccionario={}
+        diccionario['id_pokemon']=pokemon_actual.id
+        diccionario['nombre']=pokemon_actual.nombre
+        diccionario['imagen']=pokemon_actual.urlimagen
+        diccionario['tipo']=pokemon_actual.tipo
+        respuesta_final.append(diccionario)
+    return JsonResponse(respuesta_final, safe=False)
+  
+  
+
+def get_intercambio(request, nick_solicitado,nick_amigo):
+    if request.method != 'GET':
+        return None
+    intercambios=RegistroIntercambio.objects.filter(id_usuario=nick_solicitado).select_related('id_amigo')
+    intercambio_data=[]
+    for intercambio in intercambios:
+        info_intercambio = {
+            'poke': intercambio.id_pokemon.nombre,
+            'poke_amigo' : intercambio.id_pokemon_amigo.nombre,
+            'fecha' : intercambio.fecha
+        }
+        intercambio_data.append(info_intercambio)
+    return JsonResponse({'intercambios':str(intercambio_data)}, status=200)
+
