@@ -152,23 +152,46 @@ def login(request):
 
 
 # Vista eliminar amigo
-def eliminar_amigo(request, nick_amigo, nick_usuario):
-     # Verificar el token antes de continuar
+@csrf_exempt
+def modificar_amigo(request, nick_amigo, nick_usuario):
+    usuario = Usuario.objects.get(nickname = nick_usuario)
+    amigo = Usuario.objects.get(nickname = nick_amigo)
+    
+    # Verificar el token antes de continuar
     error, payload = verify_token(request)
     if error:
         return JsonResponse({'message': str(error)}, status=401, safe = False)
 
     # Solo llegará aquí si el token es válido
-    usuario = Usuario.objects.get(nickname = nick_usuario)
-    amigo = Usuario.objects.get(nickname = nick_amigo)
-    try:
-        amistad = Amigo.objects.get(id_usuario=usuario.id, id_amigo=amigo.id)
-        amistad_inversa = Amigo.objects.get(id_usuario = amigo.id, id_amigo = usuario.id)
-    except Amigo.DoesNotExist:
-        return JsonResponse({"mensaje": "Amistad no encontrada"}, status=404)
-    
-    #Aquí llegará sólo si la solicitud es válida
-    amistad.delete()
-    amistad_inversa.delete()
-    return JsonResponse({"message": "Amistad eliminada con éxito"}) 
+    if request.method == 'DELETE':  
+        try:
+            amistad = Amigo.objects.get(id_usuario=usuario.id, id_amigo=amigo.id)
+            amistad_inversa = Amigo.objects.get(id_usuario = amigo.id, id_amigo = usuario.id)
+        except Amigo.DoesNotExist:
+            return JsonResponse({"mensaje": "Amistad no encontrada"}, status=404)
+        
+        #Aquí llegará sólo si la solicitud es válida
+        amistad.delete()
+        amistad_inversa.delete()
+        return JsonResponse({"message": "Amistad eliminada con éxito"}) 
+    elif request.method == 'POST':
+        try:
+            nueva_amistad = Amigo(
+                id_usuario = usuario,
+                id_amigo = amigo
+            )
+            nueva_amistad.save()
+
+            nueva_amistad_inversa = Amigo(
+                id_usuario = amigo,
+                id_amigo = usuario
+            )
+            nueva_amistad_inversa.save()
+            return JsonResponse({'message': 'Amistad registrada exitosamente'}, status=201)
+
+        except Exception as error:
+            return JsonResponse({'error': str(error)}, status=400, safe = False)
+
+
+
 
