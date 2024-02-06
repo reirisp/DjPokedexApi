@@ -1,4 +1,4 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseNotAllowed
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.hashers import check_password, make_password
 import json, jwt
@@ -236,3 +236,37 @@ def get_intercambio(request, nick_solicitado,nick_amigo):
         intercambio_data.append(info_intercambio)
     return JsonResponse({'intercambios':str(intercambio_data)}, status=200)
 
+
+@csrf_exempt
+def perfil_usuario(request, nick_solicitado):
+    # Verifica que el método sea GET
+    if request.method != 'GET':
+        # Devuelve una respuesta indicando que solo se permiten peticiones GET
+        return HttpResponseNotAllowed(['GET'])
+    
+    try:
+        # Buscar el usuario en la base de datos
+        usuario = Usuario.objects.get(nickname = nick_solicitado)
+
+        # Simula la recuperación de datos del usuario
+        datos_usuario = {
+            "avatar": usuario.avatar,
+            "nombre": usuario.nombre,
+            "apellidos": usuario.apellidos,
+            "nickname": usuario.nickname,
+            "email": usuario.email,
+            #"fecha_registro": usuario.fecha_registro.strftime("%Y-%m-%d")
+        }
+
+        # Verifica la validez del token de sesión
+        token = request.GET.get("tokenSesion", "")
+        if not verify_token(request):
+            # Devuelve un error si el token de sesión no es válido
+            return JsonResponse({"error": "Token de sesión inválido"}, status=401)
+
+        # Devuelve la información del perfil si todo está bien
+        return JsonResponse(datos_usuario)
+
+    except Usuario.DoesNotExist:
+        # Devuelve un error si no se encuentra el usuario con el nickname proporcionado
+        return JsonResponse({"error": f"No se encontró el usuario con el nickname: { nick_solicitado }"}, status=404)

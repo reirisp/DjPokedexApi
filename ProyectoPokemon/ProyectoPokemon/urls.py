@@ -24,9 +24,9 @@ urlpatterns = [
     path('login/', views.login),
     path('register/', views.register),
     path('sesion/<int:id>', views.logout),
+    path('users/<str:nick_solicitado>/', views.perfil_usuario),
        
     path('users/<str:nick_solicitado>/amigos/', views.buscar_amigo),
-    path('users/<str:nick_usuario>/amigos/<str:nick_amigo>', views.eliminar_amigo),
     path('users/<str:nick_usuario>/amigos/<str:nick_amigo>', views.modificar_amigo),
 
     path('users/<str:nick_solicitado>/amigos/<str:nick_amigo>/intercambios', views.get_intercambio),
