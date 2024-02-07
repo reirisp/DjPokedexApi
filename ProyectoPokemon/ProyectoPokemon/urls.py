@@ -32,4 +32,6 @@ urlpatterns = [
     path('users/<str:nick_solicitado>/amigos/<str:nick_amigo>/intercambios', views.get_intercambio),
     path('capturados/', views.get_capturados),
 
+    path('users/<str:nick_solicitado>/favoritos/', views.buscar_favoritos)
+
 ]
