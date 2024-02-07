@@ -31,7 +31,7 @@ CREATE TABLE `amigo` (
   KEY `id_amigo` (`id_amigo`),
   CONSTRAINT `amigo_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id`),
   CONSTRAINT `amigo_ibfk_2` FOREIGN KEY (`id_amigo`) REFERENCES `usuario` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -48,7 +48,9 @@ INSERT INTO `amigo` VALUES
 (5,3,1),
 (6,3,2),
 (7,4,1),
-(8,4,2);
+(8,4,2),
+(9,6,1),
+(10,1,6);
 /*!40000 ALTER TABLE `amigo` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -281,13 +283,15 @@ DROP TABLE IF EXISTS `capturado`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `capturado` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `id_usuario` int(11) NOT NULL,
   `id_pokemon` int(11) NOT NULL,
-  PRIMARY KEY (`id_usuario`,`id_pokemon`),
+  PRIMARY KEY (`id`),
+  KEY `id_usuario` (`id_usuario`),
   KEY `id_pokemon` (`id_pokemon`),
   CONSTRAINT `capturado_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id`),
   CONSTRAINT `capturado_ibfk_2` FOREIGN KEY (`id_pokemon`) REFERENCES `pokemon` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -297,19 +301,19 @@ CREATE TABLE `capturado` (
 LOCK TABLES `capturado` WRITE;
 /*!40000 ALTER TABLE `capturado` DISABLE KEYS */;
 INSERT INTO `capturado` VALUES
-(1,3),
-(1,5),
-(1,10),
-(1,15),
-(1,21),
-(2,9),
-(2,13),
-(3,1),
-(3,14),
-(3,16),
-(3,19),
-(3,20),
-(4,22);
+(1,1,3),
+(2,1,5),
+(3,1,10),
+(4,1,15),
+(5,1,21),
+(6,2,9),
+(7,2,13),
+(8,3,1),
+(9,3,14),
+(10,3,16),
+(11,3,19),
+(12,3,20),
+(13,4,22);
 /*!40000 ALTER TABLE `capturado` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -321,13 +325,15 @@ DROP TABLE IF EXISTS `deseado`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `deseado` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `id_usuario` int(11) NOT NULL,
   `id_pokemon` int(11) NOT NULL,
-  PRIMARY KEY (`id_usuario`,`id_pokemon`),
+  PRIMARY KEY (`id`),
+  KEY `id_usuario` (`id_usuario`),
   KEY `id_pokemon` (`id_pokemon`),
   CONSTRAINT `deseado_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id`),
   CONSTRAINT `deseado_ibfk_2` FOREIGN KEY (`id_pokemon`) REFERENCES `pokemon` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -337,12 +343,12 @@ CREATE TABLE `deseado` (
 LOCK TABLES `deseado` WRITE;
 /*!40000 ALTER TABLE `deseado` DISABLE KEYS */;
 INSERT INTO `deseado` VALUES
-(1,14),
-(1,20),
-(2,3),
-(3,6),
-(3,9),
-(4,16);
+(1,1,14),
+(2,1,20),
+(3,2,3),
+(4,3,6),
+(5,3,9),
+(6,4,16);
 /*!40000 ALTER TABLE `deseado` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -497,13 +503,15 @@ DROP TABLE IF EXISTS `favorito`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `favorito` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `id_usuario` int(11) NOT NULL,
   `id_pokemon` int(11) NOT NULL,
-  PRIMARY KEY (`id_usuario`,`id_pokemon`),
+  PRIMARY KEY (`id`),
+  KEY `id_usuario` (`id_usuario`),
   KEY `id_pokemon` (`id_pokemon`),
   CONSTRAINT `favorito_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuario` (`id`),
   CONSTRAINT `favorito_ibfk_2` FOREIGN KEY (`id_pokemon`) REFERENCES `pokemon` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -513,16 +521,16 @@ CREATE TABLE `favorito` (
 LOCK TABLES `favorito` WRITE;
 /*!40000 ALTER TABLE `favorito` DISABLE KEYS */;
 INSERT INTO `favorito` VALUES
-(1,3),
-(1,7),
-(1,10),
-(2,11),
-(2,15),
-(2,19),
-(3,4),
-(3,12),
-(3,17),
-(3,18);
+(1,1,3),
+(2,1,7),
+(3,1,10),
+(4,2,11),
+(5,2,15),
+(6,2,19),
+(7,3,4),
+(8,3,12),
+(9,3,17),
+(10,3,18);
 /*!40000 ALTER TABLE `favorito` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -658,4 +666,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-02-01 11:02:06
+-- Dump completed on 2024-02-07 13:52:15
