@@ -308,3 +308,22 @@ def get_intercambio(request, nick_solicitado,nick_amigo):
         }
         intercambio_data.append(info_intercambio)
     return JsonResponse({'intercambios':str(intercambio_data)}, status=200)
+
+@csrf_exempt
+def post_favorito (request, id_pokemon):
+
+    if request.method == 'POST':
+        try:
+            #data = json.loads(request.body)
+            mensaje, payload=verify_token(request)
+            if mensaje:
+                return mensaje
+
+            new_favorito=Favorito(
+                usuario=payload.get('id'),
+                id_pokemon=id_pokemon
+            )
+            new_favorito.save()
+            return JsonResponse({'message':'Todo correcto'}, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
