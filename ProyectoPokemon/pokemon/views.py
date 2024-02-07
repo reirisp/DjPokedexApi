@@ -287,3 +287,20 @@ def buscar_favoritos(request, nick_solicitado):
         diccionario['tipo']=pokemon_actual.tipo
         respuesta_final.append(diccionario)
     return JsonResponse(respuesta_final, safe=False)
+
+def buscar_deseados(request, nick_solicitado):
+    if request.method != 'GET':
+        return None
+    usuario = Usuario.objects.get(nickname = nick_solicitado)
+    lista=Deseado.objects.filter(id_usuario=usuario)#.all()
+    
+    respuesta_final=[]
+    for fila_sql in lista:
+        pokemon_actual=Pokemon.objects.get(id=fila_sql.id_pokemon.id)
+        diccionario={}
+        diccionario['id_pokemon']=pokemon_actual.id
+        diccionario['nombre']=pokemon_actual.nombre
+        diccionario['imagen']=pokemon_actual.urlimagen
+        diccionario['tipo']=pokemon_actual.tipo
+        respuesta_final.append(diccionario)
+    return JsonResponse(respuesta_final, safe=False)
