@@ -18,7 +18,7 @@ def create_token(id):
     # Define el payload con la información del usuario y la fecha de expiración
     payload = {
         'id': id,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=5),
         'iat': datetime.datetime.utcnow()
     }
     # Codifica el payload en un token JWT usando la clave secreta
@@ -45,7 +45,7 @@ def verify_token(request):
     
     except jwt.ExpiredSignatureError:
         # Si el token ha expirado devolvemos un mensaje de error
-        return 'El token ha expirado!', None
+        return JsonResponse({'message': 'El Token ha expirado '}, status=401), None
 
 # Vista login
 @csrf_exempt
@@ -95,9 +95,9 @@ def register(request):
                 contraseña=contraseñaHasheada, # Almacenar la contraseña hasheada
                 fecha=datetime.datetime.now(), # Almacena la fecha de registro
             )
-
+            nuevo_usuario.save()
             # Generamos el token utilizando la función create_token (creada anteriormente)
-            token = create_token(nuevo_usuario.id)
+            token = create_token(nuevo_usuario.pk)
 
             # Asignamos el token al campo correspondiente del modelo Usuario
             nuevo_usuario.token = token
@@ -271,6 +271,7 @@ def perfil_usuario(request, nick_solicitado):
         # Devuelve un error si no se encuentra el usuario con el nickname proporcionado
         return JsonResponse({"error": f"No se encontró el usuario con el nickname: { nick_solicitado }"}, status=404)
 
+
 def buscar_favoritos(request, nick_solicitado):
     if request.method != 'GET':
         return None
@@ -304,3 +305,25 @@ def buscar_deseados(request, nick_solicitado):
         diccionario['tipo']=pokemon_actual.tipo
         respuesta_final.append(diccionario)
     return JsonResponse(respuesta_final, safe=False)
+
+  
+@csrf_exempt
+def post_favorito (request, id_pokemon):
+
+    if request.method == 'POST':
+        try:
+            #data = json.loads(request.body)
+            
+            mensaje, payload=verify_token(request)
+            print(payload['id'])
+            if mensaje:
+                return mensaje
+
+            new_favorito=Favorito(
+                id_usuario=Usuario.objects.get(pk=payload['id']),
+                id_pokemon=Pokemon.objects.get(pk=id_pokemon)
+            )
+            new_favorito.save()
+            return JsonResponse({'message':'Todo correcto'}, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
