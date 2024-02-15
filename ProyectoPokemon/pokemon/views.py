@@ -8,7 +8,7 @@ import datetime
 from django.contrib.auth import authenticate, login
 from django.utils.decorators import method_decorator
 from django.views import View
-
+from django.views.decorators.http import require_http_methods
 
 # Configuración de JWT (Json Web Token)
 SECRET_KEY = 'claveSecreta.' # Para almacenar la secret key de forma segura
@@ -18,7 +18,7 @@ def create_token(id):
     # Define el payload con la información del usuario y la fecha de expiración
     payload = {
         'id': id,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=5),
         'iat': datetime.datetime.utcnow()
     }
     # Codifica el payload en un token JWT usando la clave secreta
@@ -30,10 +30,12 @@ def create_token(id):
 @csrf_exempt
 def verify_token(request):
     # Obttenemos el token de la cabecera de autorización
-    token = request.META.get('HTTP_AUTHORIZATION')
+    token = request.META.get('HTTP_AUTHORIZATION', None)
+
     if not token:
         # Si el token no está presente devolvemos un error
         return JsonResponse({'message': 'Token no encontrado '}, status=401), None
+    
     try:
         # Si el token comienza con 'Bearer', lo divide y decodifica el payload
         if token.startswith('Bearer '):
@@ -45,7 +47,12 @@ def verify_token(request):
     
     except jwt.ExpiredSignatureError:
         # Si el token ha expirado devolvemos un mensaje de error
-        return 'El token ha expirado!', None
+        return JsonResponse({'message': 'El token ha expirado'}, status=401), None
+    
+    except jwt.DecodeError:
+        # Si hay un error en la decodificación, devolvemos un mensaje de error
+        return JsonResponse({'message': 'Error de decodificación del token'}, status=401), None
+
 
 # Vista login
 @csrf_exempt
@@ -95,9 +102,9 @@ def register(request):
                 contraseña=contraseñaHasheada, # Almacenar la contraseña hasheada
                 fecha=datetime.datetime.now(), # Almacena la fecha de registro
             )
-
+            nuevo_usuario.save()
             # Generamos el token utilizando la función create_token (creada anteriormente)
-            token = create_token(nuevo_usuario.id)
+            token = create_token(nuevo_usuario.pk)
 
             # Asignamos el token al campo correspondiente del modelo Usuario
             nuevo_usuario.token = token
@@ -141,6 +148,47 @@ def logout(request, id):
     except Usuario.DoesNotExist:
         # Devolver una respuesta JSON indicando que el usuario no fue encontrado
         return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
+
+
+@csrf_exempt
+def get_delete_usuario(request, nick_solicitado):
+    try:
+        # Buscar el usuario en la base de datos
+        usuario = Usuario.objects.get(nickname = nick_solicitado)
+    except Usuario.DoesNotExist:
+        return JsonResponse({'error': f'Usuario { nick_solicitado } no encontrado en la BBDD'}, status=404)
+
+    # Manejar la solicitud GET para el perfil del usuario
+    if request.method == 'GET':
+        datos_usuario = {
+            "avatar": usuario.avatar,
+            "nombre": usuario.nombre,
+            "apellidos": usuario.apellidos,
+            "nickname": usuario.nickname,
+            "email": usuario.email,
+            "fecha": usuario.fecha.strftime("%Y-%m-%d")
+        }
+
+        # Devuelve la información del perfil si todo está bien
+        return JsonResponse(datos_usuario)
+    
+    # Manejar la solicitud DELETE para eliminar un usuario
+    elif request.method == 'DELETE':
+        # Verificación inicial del token
+        error_response, payload = verify_token(request)
+        if error_response:
+            return error_response
+        
+        # Verificar si el ID del usuario en el payload del token coincide con el ID del usuario a eliminar
+        if payload['id'] == usuario.id:
+            # Si coincide, el usuario tiene permiso para eliminar su propia cuenta
+            usuario.delete()
+            return JsonResponse({'message': f'Usuario { nick_solicitado } eliminado exitosamente'}, status=200)
+        else:
+            return JsonResponse({'error': f'No tienes permiso para eliminar al usuario: { nick_solicitado }'}, status=403)
+
+    else:
+        return HttpResponseNotAllowed(['GET', 'DELETE'])
 
 
 # Vista buscar amigos
@@ -235,38 +283,3 @@ def get_intercambio(request, nick_solicitado,nick_amigo):
         }
         intercambio_data.append(info_intercambio)
     return JsonResponse({'intercambios':str(intercambio_data)}, status=200)
-
-
-@csrf_exempt
-def perfil_usuario(request, nick_solicitado):
-    # Verifica que el método sea GET
-    if request.method != 'GET':
-        # Devuelve una respuesta indicando que solo se permiten peticiones GET
-        return HttpResponseNotAllowed(['GET'])
-    
-    try:
-        # Buscar el usuario en la base de datos
-        usuario = Usuario.objects.get(nickname = nick_solicitado)
-
-        # Simula la recuperación de datos del usuario
-        datos_usuario = {
-            "avatar": usuario.avatar,
-            "nombre": usuario.nombre,
-            "apellidos": usuario.apellidos,
-            "nickname": usuario.nickname,
-            "email": usuario.email,
-            #"fecha_registro": usuario.fecha_registro.strftime("%Y-%m-%d")
-        }
-
-        # Verifica la validez del token de sesión
-        token = request.GET.get("tokenSesion", "")
-        if not verify_token(request):
-            # Devuelve un error si el token de sesión no es válido
-            return JsonResponse({"error": "Token de sesión inválido"}, status=401)
-
-        # Devuelve la información del perfil si todo está bien
-        return JsonResponse(datos_usuario)
-
-    except Usuario.DoesNotExist:
-        # Devuelve un error si no se encuentra el usuario con el nickname proporcionado
-        return JsonResponse({"error": f"No se encontró el usuario con el nickname: { nick_solicitado }"}, status=404)
