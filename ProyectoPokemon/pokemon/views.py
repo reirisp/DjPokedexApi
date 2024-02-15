@@ -327,3 +327,24 @@ def post_favorito (request, id_pokemon):
             return JsonResponse({'message':'Todo correcto'}, status=200)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
+
+@csrf_exempt
+def post_capturado (request, id_pokemon):
+
+    if request.method == 'POST':
+        try:
+            #data = json.loads(request.body)
+            
+            mensaje, payload=verify_token(request)
+            print(payload['id'])
+            if mensaje:
+                return mensaje
+
+            new_capturado=Capturado(
+                id_usuario=Usuario.objects.get(pk=payload['id']),
+                id_pokemon=Pokemon.objects.get(pk=id_pokemon)
+            )
+            new_capturado.save()
+            return JsonResponse({'message':'Todo correcto'}, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
