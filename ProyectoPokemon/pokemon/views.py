@@ -47,6 +47,7 @@ def verify_token(request):
     
     except jwt.ExpiredSignatureError:
         # Si el token ha expirado devolvemos un mensaje de error
+
         return JsonResponse({'message': 'El token ha expirado'}, status=401), None
     
     except jwt.DecodeError:
@@ -283,3 +284,116 @@ def get_intercambio(request, nick_solicitado,nick_amigo):
         }
         intercambio_data.append(info_intercambio)
     return JsonResponse({'intercambios':str(intercambio_data)}, status=200)
+
+@csrf_exempt
+def perfil_usuario(request, nick_solicitado):
+    # Verifica que el método sea GET
+    if request.method != 'GET':
+        # Devuelve una respuesta indicando que solo se permiten peticiones GET
+        return HttpResponseNotAllowed(['GET'])
+    
+    try:
+        # Buscar el usuario en la base de datos
+        usuario = Usuario.objects.get(nickname = nick_solicitado)
+
+        # Simula la recuperación de datos del usuario
+        datos_usuario = {
+            "avatar": usuario.avatar,
+            "nombre": usuario.nombre,
+            "apellidos": usuario.apellidos,
+            "nickname": usuario.nickname,
+            "email": usuario.email,
+            #"fecha_registro": usuario.fecha_registro.strftime("%Y-%m-%d")
+        }
+
+        # Verifica la validez del token de sesión
+        token = request.GET.get("tokenSesion", "")
+        if not verify_token(request):
+            # Devuelve un error si el token de sesión no es válido
+            return JsonResponse({"error": "Token de sesión inválido"}, status=401)
+
+        # Devuelve la información del perfil si todo está bien
+        return JsonResponse(datos_usuario)
+
+    except Usuario.DoesNotExist:
+        # Devuelve un error si no se encuentra el usuario con el nickname proporcionado
+        return JsonResponse({"error": f"No se encontró el usuario con el nickname: { nick_solicitado }"}, status=404)
+
+
+def buscar_favoritos(request, nick_solicitado):
+    if request.method != 'GET':
+        return None
+    usuario = Usuario.objects.get(nickname = nick_solicitado)
+    lista=Favorito.objects.filter(id_usuario=usuario)#.all()
+    
+    respuesta_final=[]
+    for fila_sql in lista:
+        pokemon_actual=Pokemon.objects.get(id=fila_sql.id_pokemon.id)
+        diccionario={}
+        diccionario['id_pokemon']=pokemon_actual.id
+        diccionario['nombre']=pokemon_actual.nombre
+        diccionario['imagen']=pokemon_actual.urlimagen
+        diccionario['tipo']=pokemon_actual.tipo
+        respuesta_final.append(diccionario)
+    return JsonResponse(respuesta_final, safe=False)
+
+def buscar_deseados(request, nick_solicitado):
+    if request.method != 'GET':
+        return None
+    usuario = Usuario.objects.get(nickname = nick_solicitado)
+    lista=Deseado.objects.filter(id_usuario=usuario)#.all()
+    
+    respuesta_final=[]
+    for fila_sql in lista:
+        pokemon_actual=Pokemon.objects.get(id=fila_sql.id_pokemon.id)
+        diccionario={}
+        diccionario['id_pokemon']=pokemon_actual.id
+        diccionario['nombre']=pokemon_actual.nombre
+        diccionario['imagen']=pokemon_actual.urlimagen
+        diccionario['tipo']=pokemon_actual.tipo
+        respuesta_final.append(diccionario)
+    return JsonResponse(respuesta_final, safe=False)
+
+  
+@csrf_exempt
+def post_favorito (request, id_pokemon):
+
+    if request.method == 'POST':
+        try:
+            #data = json.loads(request.body)
+            
+            mensaje, payload=verify_token(request)
+            print(payload['id'])
+            if mensaje:
+                return mensaje
+
+            new_favorito=Favorito(
+                id_usuario=Usuario.objects.get(pk=payload['id']),
+                id_pokemon=Pokemon.objects.get(pk=id_pokemon)
+            )
+            new_favorito.save()
+            return JsonResponse({'message':'Todo correcto'}, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+@csrf_exempt
+def post_capturado (request, id_pokemon):
+
+    if request.method == 'POST':
+        try:
+            #data = json.loads(request.body)
+            
+            mensaje, payload=verify_token(request)
+            print(payload['id'])
+            if mensaje:
+                return mensaje
+
+            new_capturado=Capturado(
+                id_usuario=Usuario.objects.get(pk=payload['id']),
+                id_pokemon=Pokemon.objects.get(pk=id_pokemon)
+            )
+            new_capturado.save()
+            return JsonResponse({'message':'Todo correcto'}, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
